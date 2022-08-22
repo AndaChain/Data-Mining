@@ -11,41 +11,23 @@ def data(name):
 	y = data.iloc[:, 1].to_numpy()
 	return x,y
 	
-def training_set(x,y):
+def training_set(x,y,seed=1,test_size=10,random=False):
+	if(random):
+		x_, x, y_, y = train_test_split(x.reshape(-1, 1), y.reshape(-1, 1), test_size=test_size, random_state=seed)
 	reg = line_reg(x,y)
-	
 	y_pred = reg.y(x)
 	w1 = reg.w1
 	w0 = reg.w0
 	mse = reg.mse(y, y_pred)
 	
-	#print(y_pred)
-	#print(w1)
-	#print(w0)
-	#print(np.sqrt(mse))
-	
-	#plt.plot(x, y_pred, "-") # training set
-	
 	return np.sqrt(mse)
 
 def holdout(x,y,seed,test_size):
 	x_train, x_test, y_train, y_test = train_test_split(x.reshape(-1, 1), y.reshape(-1, 1), test_size=test_size, random_state=seed)
-	#print(x_train,y_train)
-	#print(x_test,y_test)
-	
 	reg = line_reg(x_train,y_train)
-	
 	y_pred = reg.y(x_test)
-	w1 = reg.w1
-	w0 = reg.w0
 	mse = reg.mse(y_test, y_pred)
 	
-	#print(y_pred)
-	#print(w1)
-	#print(w0)
-	#print(np.sqrt(mse))
-	#plt.plot(x_test, y_pred, "-") # holdout
-
 	return np.sqrt(mse)
 	
 def cross_vali(x,y,seed,n):
@@ -54,29 +36,23 @@ def cross_vali(x,y,seed,n):
 	for train_index, test_index in kf.split(x):
 		x_train, x_test = x[train_index], x[test_index]
 		y_train, y_test = y[train_index], y[test_index]
-		reg = line_reg(x_train,y_train)
 		
+		reg = line_reg(x_train,y_train)
 		y_pred = reg.y(x_test)
-		w1 = reg.w1
-		w0 = reg.w0
 		mse = reg.mse(y_test, y_pred)
 		
-		#print(y_pred)
-		#print(w1)
-		#print(w0)
-		#print(np.sqrt(mse))
 		Mean_kf += np.sqrt(mse)
-		#plt.plot(x_test, y_pred, "-") # holdout
 	
 	return Mean_kf/n
 
 if __name__ == '__main__':
-	name = 'HeightWeight100.csv'
+	name = 'HeightWeight.csv'
 	#name = 'RocketPropellant.csv'
-	#round_gradient = 1000
 	x_real = np.linspace(-200,200, 10000)
 	x,y = data(name)
 	#plt.plot(x, y, "o")
+	
+	seed_N = 10000
 	
 	arr_h = []
 	arr_c = []
@@ -87,21 +63,23 @@ if __name__ == '__main__':
 	arr_aveg_c = []
 	arr_std_c = []
 	
-	#set_h = {}
-	#set_c = {}
-	
-	rmse_t = training_set(x,y) # training set
+	# ------------------holdout-------------------
 	arr_test_size = np.arange(0.1, 1, 0.1)
-	print("holdout")
+	print("------------------holdout------------------")
 	for test_size in arr_test_size: #y
 		arr_h = []
-		for seed in range(1,101): #x
-			rmse_h = holdout(x,y,seed,test_size) # holdout
+		for seed in range(seed_N): #x
+			rmse_h = holdout(x,y,seed+1,test_size) # holdout
 			arr_h.append(rmse_h)
-		arr_aveg_h.append( sum(arr_h)/len(arr_h) )
-		arr_std_h.append( np.std(arr_h) )
-		#print( round(test_size,2), round(sum(arr_h)/len(arr_h),3), np.std(arr_h) )
+		aveg = sum(arr_h)/len(arr_h)
+		std = np.std(arr_h)
 		
+		arr_aveg_h.append( aveg )
+		arr_std_h.append( std )
+		
+		print( f"Split ratio:{round(test_size, 3)}     RMSE:{round(aveg, 3)}     STD:{std}" )
+	
+	# ------------------ plot holdout-------------------
 	plt.plot(arr_test_size, arr_aveg_h, "-")
 	plt.xlabel('Split ratio of Data to Testing')
 	plt.ylabel('RMSE')
@@ -114,17 +92,23 @@ if __name__ == '__main__':
 	plt.title('X:Split ratio & Y:STD')
 	plt.show()
 	
+	# ------------------cross validation-------------------
 	_kf = np.arange(2, 11, 1)
-	print("cross validation")
+	print("------------------cross validation------------------")
 	for k in _kf: #y
 		arr_c = []
-		for seed in range(14501,14601): #x
-			rmse_c = cross_vali(x,y,seed,k) # cross_validation
+		for seed in range(seed_N): #x
+			rmse_c = cross_vali(x,y,seed+1,k) # cross_validation
 			arr_c.append(rmse_c)
-		arr_aveg_c.append( sum(arr_c)/len(arr_c) )
-		arr_std_c.append( np.std(arr_c) )
-		#print( round(k,2), round(sum(arr_c)/len(arr_c),3), np.std(arr_h) )
+		aveg = sum(arr_c)/len(arr_c)
+		std = np.std(arr_c)
+		
+		arr_aveg_c.append( aveg )
+		arr_std_c.append( std )
+		
+		print( f"KFold:{round(k, 3)}     RMSE:{round(aveg, 3)}     STD:{std}" )
 	
+	# ------------------ plot cross validation-------------------
 	plt.plot(_kf, arr_aveg_c, "-")
 	plt.xlabel('KFold')
 	plt.ylabel('RMSE')
@@ -136,3 +120,20 @@ if __name__ == '__main__':
 	plt.ylabel('STD')
 	plt.title('X:KFold & Y:STD')
 	plt.show()
+	
+	# ------------------matric & training set rmse-------------------
+	sum_rmse_t = 0
+	sum_rmse_h = 0
+	sum_rmse_c = 0
+	N = 0
+	for seed in range(seed_N):
+		sum_rmse_t += training_set(x,y,seed+1,0.002,True)
+		sum_rmse_h += holdout(x,y,seed+1,0.002)
+		sum_rmse_c += cross_vali(x,y,seed+1,500)
+		N += 1
+	rmse_t = training_set(x,y) # training set NO Random
+	print(f"\nrmse training set(10000): {rmse_t}")
+	print(f"rmse training set(20*random): {sum_rmse_t/N}")
+	print(f"rmse holdout: {sum_rmse_h/N}")
+	print(f"rmse cross validation: {sum_rmse_c/N}")
+
