@@ -52,7 +52,7 @@ if __name__ == '__main__':
 	x,y = data(name)
 	#plt.plot(x, y, "o")
 	
-	seed_N = 10000
+	seed_N = 100
 	
 	arr_h = []
 	arr_c = []
@@ -63,12 +63,15 @@ if __name__ == '__main__':
 	arr_aveg_c = []
 	arr_std_c = []
 	
+	# 
+	_rmse_t = training_set(x,y)
+	
 	# ------------------holdout-------------------
-	arr_test_size = np.arange(0.1, 1, 0.1)
+	arr_test_size = np.arange(0.05, 1, 0.05)
 	print("------------------holdout------------------")
-	for test_size in arr_test_size: #y
+	for test_size in arr_test_size:
 		arr_h = []
-		for seed in range(seed_N): #x
+		for seed in range(seed_N):
 			rmse_h = holdout(x,y,seed+1,test_size) # holdout
 			arr_h.append(rmse_h)
 		aveg = sum(arr_h)/len(arr_h)
@@ -81,23 +84,24 @@ if __name__ == '__main__':
 	
 	# ------------------ plot holdout-------------------
 	plt.plot(arr_test_size, arr_aveg_h, "-")
+	plt.plot(arr_test_size, len(arr_aveg_h)*[_rmse_t], "--")
 	plt.xlabel('Split ratio of Data to Testing')
 	plt.ylabel('RMSE')
 	plt.title('X:Split ratio & Y:RMSE')
 	plt.show()
 	
-	plt.plot(arr_test_size, arr_std_h, "--")
+	plt.plot(arr_test_size, arr_std_h, "-")
 	plt.xlabel('Split ratio of Data to Testing')
 	plt.ylabel('STD')
 	plt.title('X:Split ratio & Y:STD')
 	plt.show()
 	
 	# ------------------cross validation-------------------
-	_kf = np.arange(2, 11, 1)
+	_kf = np.arange(5, 100, 5)
 	print("------------------cross validation------------------")
-	for k in _kf: #y
+	for k in _kf:
 		arr_c = []
-		for seed in range(seed_N): #x
+		for seed in range(seed_N):
 			rmse_c = cross_vali(x,y,seed+1,k) # cross_validation
 			arr_c.append(rmse_c)
 		aveg = sum(arr_c)/len(arr_c)
@@ -110,30 +114,75 @@ if __name__ == '__main__':
 	
 	# ------------------ plot cross validation-------------------
 	plt.plot(_kf, arr_aveg_c, "-")
+	plt.plot(_kf, len(arr_aveg_c)*[_rmse_t], "--")
 	plt.xlabel('KFold')
 	plt.ylabel('RMSE')
 	plt.title('X:KFold & Y:RMSE')
 	plt.show()
 	
-	plt.plot(_kf, arr_std_c, "--")
+	plt.plot(_kf, arr_std_c, "-")
 	plt.xlabel('KFold')
 	plt.ylabel('STD')
 	plt.title('X:KFold & Y:STD')
 	plt.show()
 	
-	# ------------------matric & training set rmse-------------------
-	sum_rmse_t = 0
-	sum_rmse_h = 0
-	sum_rmse_c = 0
-	N = 0
-	for seed in range(seed_N):
-		sum_rmse_t += training_set(x,y,seed+1,0.002,True)
-		sum_rmse_h += holdout(x,y,seed+1,0.002)
-		sum_rmse_c += cross_vali(x,y,seed+1,500)
-		N += 1
-	rmse_t = training_set(x,y) # training set NO Random
-	print(f"\nrmse training set(10000): {rmse_t}")
-	print(f"rmse training set(20*random): {sum_rmse_t/N}")
-	print(f"rmse holdout: {sum_rmse_h/N}")
-	print(f"rmse cross validation: {sum_rmse_c/N}")
+	# ------------------Matric & Sampling Size-------------------
+	arr_rmse_t = []
+	arr_rmse_h = []
+	arr_rmse_c = []
+	
+	arr_std_t = []
+	arr_std_h = []
+	arr_std_c = []
+	
+	att_n = []
+	
+	for _n in range(100,1100,100):
+		sampling_ratio = 1-(_n/len(x))
+		att_n.append(_n)	
+		
+		arr_t = []
+		arr_h = []
+		arr_c = []
+		for seed in range(seed_N):
+			x_train, x_test, y_train, y_test = train_test_split(x.reshape(-1, 1), y.reshape(-1, 1), test_size=sampling_ratio, random_state=seed)
+			rmse_t = training_set(x_train,y_train)
+			rmse_h = holdout(x_train,y_train,seed+1,0.9)
+			rmse_c = cross_vali(x_train,y_train,seed+1,10)
+			
+			arr_t.append(rmse_t)
+			arr_h.append(rmse_h)
+			arr_c.append(rmse_c)
+		
+		aveg_t = sum(arr_t)/len(arr_t)
+		std_t = np.std(arr_t)
+		aveg_h = sum(arr_h)/len(arr_h)
+		std_h = np.std(arr_h)
+		aveg_c = sum(arr_c)/len(arr_c)
+		std_c = np.std(arr_c)
+		
+		arr_rmse_t.append( aveg_t )
+		arr_std_t.append( std_t )
+		arr_rmse_h.append( aveg_h )
+		arr_std_h.append( std_h )
+		arr_rmse_c.append( aveg_c )
+		arr_std_c.append( std_c )
 
+	# ------------------plot Matric & Sampling Size-------------------
+	plt.plot(att_n, arr_rmse_t, "-")
+	plt.plot(att_n, arr_rmse_h, "-")
+	plt.plot(att_n, arr_rmse_c, "-")
+	plt.legend(["training set",'holdout 90%','cross validation 10 fold'], loc='best')
+	plt.xlabel('Sampling Size')
+	plt.ylabel('RMSE')
+	plt.title('Accuracy Test')
+	plt.show()
+
+	plt.plot(att_n, arr_std_t, "-")
+	plt.plot(att_n, arr_std_h, "-")
+	plt.plot(att_n, arr_std_c, "-")
+	plt.legend(["training set",'holdout 90%','cross validation 10 fold'], loc='best')
+	plt.xlabel('Sampling Size')
+	plt.ylabel('STD')
+	plt.title('Precision Test')
+	plt.show()
