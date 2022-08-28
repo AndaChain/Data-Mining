@@ -4,7 +4,11 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split, KFold
 from sklearn.metrics import mean_squared_error
 from Line_reg import LinearReg as line_reg
-	
+from sklearn.metrics import mean_squared_error
+
+import random
+random.seed(1)
+
 def data(name):
 	data = pd.read_csv(name)
 	for i in range(0,len(data.columns)-1):
@@ -22,15 +26,14 @@ def data(name):
 	
 	return x1,x2
 	
-def training_set(x,y,seed=1,test_size=10,random=False):
+def training_set(x,y,seed=1,test_size=10,random=False,degree=1):
 	if(random):
 		x_, x, y_, y = train_test_split(x.reshape(-1, 1), y.reshape(-1, 1), test_size=test_size, random_state=seed)
-	reg = line_reg(x,y)
+	reg = line_reg(x,y,degree)
 	y_pred = reg.y(x)
 	w1 = reg.w1
 	w0 = reg.w0
 	mse = reg.mse(y, y_pred)
-	
 	return np.sqrt(mse)
 
 def holdout(x,y,seed,test_size):
@@ -41,20 +44,25 @@ def holdout(x,y,seed,test_size):
 	
 	return np.sqrt(mse)
 	
-def cross_vali(x,y,seed,n):
+def cross_vali(x,y,seed=1,n=10,degree=1):
 	kf = KFold(n_splits=n, random_state=seed, shuffle=True)
 	Mean_kf = 0
 	for train_index, test_index in kf.split(x):
 		x_train, x_test = x[train_index], x[test_index]
 		y_train, y_test = y[train_index], y[test_index]
 		
-		reg = line_reg(x_train,y_train)
+		reg = line_reg(x_train,y_train,degree)
+		w1 = reg.w1
+		w0 = reg.w0
 		y_pred = reg.y(x_test)
 		mse = reg.mse(y_test, y_pred)
 		
 		Mean_kf += np.sqrt(mse)
 	
 	return Mean_kf/n
+
+def f(x):
+	return np.sin(np.pi*x) # from data, they are sin(pi)
 
 def main():
 	name = 'HeightWeight100.csv'
@@ -200,67 +208,95 @@ def main():
 	plt.title('Precision Test')
 	plt.show()
 
-if __name__ == '__main__':
-	"""
-	name = 'GenderHeightWeight.csv'
-	#name = 'RocketPropellant.csv'
-	x1,x2,y = data(name)
-	plt.plot(x2, y, "o")
+def degreeAndError():
+	sample = 10
+	tag = "noiseless"
+	#name = "sin_"+tag+"_"+str(sample)+"sample.csv"
+	#data = pd.read_csv(name)
+	n = 80 #len(data.iloc[:,].to_numpy()[0])
+	
+	x_1 = np.arange( -1,1,0.2/(int(sample/10)) ) # data.iloc[:, 0].to_numpy()
+	y =  f(x_1)
+	if(tag == "noisy"):
+			ran_f = np.array([i+random.random() for i in f(x_1)])
+			y = ran_f#data.iloc[:, -1].to_numpy() #f(x_1)
+	
+	#plt.plot(x_1, y,"o-")
+	#plt.plot(x_1,data.iloc[:, -1].to_numpy(),"o--")
+	
+	#YY = mean_squared_error(y,f(x_1))
+	#plt.plot(x_1,[YY]*sample,"-")
+	#plt.show()
+	#print(YY)
+	
+	Y1 = np.array([])
+	Y2 = np.array([])
+	X = np.array([i for i in range(1,n)])
+	X_min = np.max(X)
+	Y_min = np.max(y)
+	for d in X:
+		_temp = np.sqrt(cross_vali(x_1, y, degree=d))
+		Y1 = np.append(Y1, [np.sqrt(training_set(x_1, y, degree=d))])
+		Y2 = np.append(Y2, [_temp])
+		if(Y_min > _temp):
+			Y_min = _temp
+			X_min = d
+			
+	plt.plot(X,Y1,"-")
+	plt.plot(X,Y2,"-")
+	plt.plot(X_min,Y_min,"o")
+	plt.annotate("("+str(X_min)+" , "+str(np.round(Y_min,3))+")",(X_min,Y_min))
+	plt.legend(["training set",'cross validation 10 fold', 'Ok! Degree'], loc='best')
+	plt.xlabel('Degree of Fit')
+	plt.ylabel('RMSE')
+	plt.title('training set & cross validation by '+str(sample)+' sample '+"("+tag+")")
 	plt.show()
-	x_m = np.array([])
-	x_f = np.array([])
 	
-	y_m = np.array([])
-	y_f = np.array([])
+def sampleAndError():
+	degree = 21 #len(data.iloc[:,].to_numpy()[0])
+	sample = 80
+	tag = "noiseless"
+	#name = "sin_"+tag+"_"+str(sample)+"sample.csv"
+	#data = pd.read_csv(name)
 	
-	for i in range(len(x1)):
-		if(x1[i] == 1):
-			x_m = np.append(x_m, [x2[i]])
-			y_m = np.append(y_m, [y[i]])
-		else:
-			x_f = np.append(x_f, [x2[i]])
-			y_f = np.append(y_f, [y[i]])
+	Y1 = np.array([])
+	Y2 = np.array([])
+	X = np.array([i+1 for i in range(10,sample)])
+	
+	####temp####
+	x_1 = np.arange( -1,1,0.2/(int(sample/10)) ) # data.iloc[:, 0].to_numpy()
+	y =  f(x_1)
+	####temp####
+	
+	X_min = np.max(X)
+	Y_min = np.max(y)	
+	
+	for s in X:
+		x_1 = np.arange( -1,1,0.2/(int(s/10)) ) # data.iloc[:, 0].to_numpy()
+		y =  f(x_1)
 		
-	print(len(x_m))
-	print(y_m)
-	
-	print(len(x_f))
-	print(y_f)
-	plt.plot(x_m, y_m, "o")
-	plt.plot(x_f, y_f, "o")
-	
-	# -------------male-------------
-	print("------male------")
-	reg1 = line_reg(x_m,y_m)
-	plt.plot(x2, reg1.y(x2))
-	print("w1=:",reg1.w1[0][0])
-	print("w0=:",reg1.w0[0])
-	print("RMSE=:",np.sqrt( reg1.mse(y, reg1.y(x2)) ))
-	
-	# -------------female-------------
-	print("------female------")
-	reg2 = line_reg(x_f,y_f)
-	plt.plot(x2, reg2.y(x2))
-	print("w1=:",reg2.w1[0][0])
-	print("w0=:",reg2.w0[0])
-	print("RMSE=:",np.sqrt( reg2.mse(y, reg2.y(x2)) ))
-	
-	
-	# -------------combine-------------
-	print("------combine------")
-	mean_m = (reg1.w1+reg2.w1)/2
-	mean_c = (reg1.w0+reg2.w0)/2
-	
-	print("w1=:",mean_m[0][0])
-	print("w0=:",mean_c[0])
-	y_ = x2*mean_m[0][0] + mean_c[0]
-	print("RMSE=:",np.sqrt( mean_squared_error(y, y_) ))
-	
-	plt.plot(x2, y_)
-	plt.legend(["Male",'Female','Model Male',"Model Female","Model Combine"], loc='best')
+		if(tag == "noisy"):
+			ran_f = np.array([i+random.random() for i in f(x_1)])
+			y = ran_f#data.iloc[:, -1].to_numpy() #f(x_1)
+		
+		_temp = np.sqrt(cross_vali(x_1, y, degree=degree))
+		Y1 = np.append(Y1, [np.sqrt(training_set(x_1, y, degree=degree))])
+		Y2 = np.append(Y2, [_temp])
+		
+		if(Y_min > _temp):
+			Y_min = _temp
+			X_min = s
+
+	plt.plot(X,Y1,"-")
+	plt.plot(X,Y2,"-")
+	plt.plot(X_min,Y_min,"o")
+	plt.annotate("("+str(X_min)+" , "+str(np.round(Y_min,3))+")",(X_min,Y_min))
+	plt.legend(["training set",'cross validation 10 fold', 'Ok! Sample'], loc='best')
+	plt.xlabel('Number of Sample')
+	plt.ylabel('RMSE')
+	plt.title('training set & cross validation by '+str(degree)+' degree')
 	plt.show()
-	
-	diff=reg1.y(x2)-reg2.y(x2)
-	print("diff=:",(sum(diff)/len(diff))[0])
-	"""
-	main()
+
+if __name__ == '__main__':
+	degreeAndError()
+	sampleAndError()
