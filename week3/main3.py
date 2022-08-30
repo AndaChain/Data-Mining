@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split, KFold
 from sklearn.metrics import mean_squared_error
 from Line_reg import LinearReg as line_reg
-from sklearn.metrics import mean_squared_error
 
 import random
 random.seed(1)
@@ -27,8 +26,10 @@ def data(name):
 	return x1,x2
 	
 def training_set(x,y,seed=1,test_size=10,random=False,degree=1):
+	
 	if(random):
 		x_, x, y_, y = train_test_split(x.reshape(-1, 1), y.reshape(-1, 1), test_size=test_size, random_state=seed)
+	
 	reg = line_reg(x,y,degree)
 	y_pred = reg.y(x)
 	w1 = reg.w1
@@ -210,21 +211,21 @@ def main():
 
 def degreeAndError():
 	sample = 10
-	tag = "noiseless"
+	tag = "noisy"
 	#name = "sin_"+tag+"_"+str(sample)+"sample.csv"
 	#data = pd.read_csv(name)
-	n = 80 #len(data.iloc[:,].to_numpy()[0])
+	n = 80+1 #len(data.iloc[:,].to_numpy()[0])
 	
-	x_1 = np.arange( -1,1,0.2/(int(sample/10)) ) # data.iloc[:, 0].to_numpy()
-	y =  f(x_1)
+	x_1 = np.arange( -1,1,0.2/(int(sample/10)) ) #data.iloc[:, 0].to_numpy()#np.arange( -1,1,0.2/(int(sample/10)) )
+	y = f(x_1) #data.iloc[:, 8].to_numpy()#f(x_1)
 	if(tag == "noisy"):
 			ran_f = np.array([i+random.random() for i in f(x_1)])
 			y = ran_f#data.iloc[:, -1].to_numpy() #f(x_1)
 	
 	#plt.plot(x_1, y,"o-")
-	#plt.plot(x_1,data.iloc[:, -1].to_numpy(),"o--")
+	#plt.plot(x_1,data.iloc[:, 8].to_numpy(),"o--")
 	
-	#YY = mean_squared_error(y,f(x_1))
+	#YY = mean_squared_error(y,data.iloc[:, 8].to_numpy())
 	#plt.plot(x_1,[YY]*sample,"-")
 	#plt.show()
 	#print(YY)
@@ -234,10 +235,12 @@ def degreeAndError():
 	X = np.array([i for i in range(1,n)])
 	X_min = np.max(X)
 	Y_min = np.max(y)
+	
 	for d in X:
-		_temp = np.sqrt(cross_vali(x_1, y, degree=d))
-		Y1 = np.append(Y1, [np.sqrt(training_set(x_1, y, degree=d))])
-		Y2 = np.append(Y2, [_temp])
+		_temp = cross_vali(x_1, y, degree=d)
+		Y1 = np.append(Y1, [ training_set(x_1, y, degree=d) ])
+		Y2 = np.append(Y2, [ _temp ])
+		
 		if(Y_min > _temp):
 			Y_min = _temp
 			X_min = d
@@ -253,18 +256,20 @@ def degreeAndError():
 	plt.show()
 	
 def sampleAndError():
-	degree = 21 #len(data.iloc[:,].to_numpy()[0])
-	sample = 80
-	tag = "noiseless"
+	degree = 5 #len(data.iloc[:,].to_numpy()[0])
+	sample = 50
+	start_x = -1
+	end_x = 1
+	tag = "noisy"
 	#name = "sin_"+tag+"_"+str(sample)+"sample.csv"
 	#data = pd.read_csv(name)
 	
 	Y1 = np.array([])
 	Y2 = np.array([])
-	X = np.array([i+1 for i in range(10,sample)])
+	X = np.array([i for i in range(10,sample+1)])
 	
 	####temp####
-	x_1 = np.arange( -1,1,0.2/(int(sample/10)) ) # data.iloc[:, 0].to_numpy()
+	x_1 = np.arange( start_x,end_x,0.2/(int(sample/10)) ) # data.iloc[:, 0].to_numpy()
 	y =  f(x_1)
 	####temp####
 	
@@ -272,16 +277,19 @@ def sampleAndError():
 	Y_min = np.max(y)	
 	
 	for s in X:
-		x_1 = np.arange( -1,1,0.2/(int(s/10)) ) # data.iloc[:, 0].to_numpy()
+		diff = 0.2/(s/10)
+		x_1 = np.array([])
+		for i in range(s):
+			x_1 = np.append(x_1, [start_x+(i*diff)]) #np.arange( -1,1,0.2/diff ) # data.iloc[:, 0].to_numpy()
 		y =  f(x_1)
-		
+			
 		if(tag == "noisy"):
-			ran_f = np.array([i+random.random() for i in f(x_1)])
+			ran_f = np.array([i+random.random() for i in y])
 			y = ran_f#data.iloc[:, -1].to_numpy() #f(x_1)
 		
-		_temp = np.sqrt(cross_vali(x_1, y, degree=degree))
-		Y1 = np.append(Y1, [np.sqrt(training_set(x_1, y, degree=degree))])
-		Y2 = np.append(Y2, [_temp])
+		_temp = cross_vali(x_1, y, degree=degree)
+		Y1 = np.append(Y1, [ training_set(x_1, y, degree=degree) ])
+		Y2 = np.append(Y2, [ _temp ])
 		
 		if(Y_min > _temp):
 			Y_min = _temp
@@ -294,7 +302,7 @@ def sampleAndError():
 	plt.legend(["training set",'cross validation 10 fold', 'Ok! Sample'], loc='best')
 	plt.xlabel('Number of Sample')
 	plt.ylabel('RMSE')
-	plt.title('training set & cross validation by '+str(degree)+' degree')
+	plt.title('training set & cross validation by '+str(degree)+' degree'+"("+tag+")")
 	plt.show()
 
 if __name__ == '__main__':

@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import random
-#from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LinearRegression
 
 class liner:
 	def __init__(self, slope, intercept):
