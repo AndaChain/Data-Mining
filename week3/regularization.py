@@ -171,6 +171,7 @@ def random(period, data_point, size):
     return np.array([[[uniform(min(period), max(period))] for i in range(data_point)] for j in range(size)])
     
 x = random([-1, 1], 2, 10000)
+print(x)
 y = []
 for i in x:
     temp = []
@@ -205,6 +206,7 @@ plt.show()
 
 bias = np.round(np.mean((y_mean_pred - target_func(x_lin)) ** 2), 2)
 var = []
+print(y_total)
 for y_pred in y_total:
     var.append(np.mean((y_pred - y_mean_pred)**2))
 var = np.array(var)

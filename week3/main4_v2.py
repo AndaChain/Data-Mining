@@ -5,6 +5,7 @@ from sklearn.linear_model import LinearRegression
 #from Line_reg import LinearReg as line_reg
 from sklearn.linear_model import Ridge
 from sklearn.linear_model import Lasso
+from sklearn.metrics import mean_squared_error
 random.seed(1)
 
 class model:
@@ -38,15 +39,28 @@ class model:
 		return x,y
 	
 	def create_model(self, x, y):# show model
-		return LinearRegression().fit(x.reshape(-1, 1), y.reshape(-1, 1))#line_reg(x, y)
+		#return LinearRegression().fit(x.reshape(-1, 1), y.reshape(-1, 1))#line_reg(x, y)
 		#return Ridge(alpha=10).fit(x.reshape(-1, 1), y.reshape(-1, 1))#line_reg(x, y)
-		#return Lasso(alpha=0.35).fit(x.reshape(-1, 1), y.reshape(-1, 1))#line_reg(x, y)
-	
+		return Lasso(alpha=0.35).fit(x.reshape(-1, 1), y.reshape(-1, 1))#line_reg(x, y)
+
+	def get_model_avg(self, models): # show model average
+		sum_w1 = 0
+		sum_w0 = 0
+		for g in models:
+			w1 = g.coef_
+			w0 = g.intercept_
+			sum_w1 += w1
+			sum_w0 += w0
+		return self.x_real*sum_w1/len(models) + sum_w0/len(models)
+
 	def get_model(self): # show bias
 		models = np.array([])
 		for i in range(self.n): # n is show number of model
 			x,y = self.random_input(self.N, -1, 1)
 			_model = self.create_model(x,y)
+			
+			print( mean_squared_error(y, _model.predict(x.reshape(-1, 1))) )
+			
 			models = np.append(models, [_model])
 			plt.plot( self.x_real, _model.predict(self.x_real.reshape(-1, 1)), "-", c='k' )
 		return models
@@ -57,12 +71,15 @@ class model:
 		for N in arr_N:
 			self.set_N_sample(N)
 			models = self.get_model()
+		
+		g_aveg = self.get_model_avg(models)
 		plt.plot( self.x_real, self.fun(self.x_real.reshape(-1, 1)), "-", linewidth=7.0)
+		plt.plot( self.x_real, g_aveg, "-")
+		plt.xlim(-1,1)
+		plt.ylim(-1,1)
+		
 		plt.show()
-		
-		
 		
 if __name__ == '__main__':
 	obj = model()
-	
 	obj.main()
