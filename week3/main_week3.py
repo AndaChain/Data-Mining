@@ -48,6 +48,7 @@ def holdout(x,y,seed,test_size):
 def cross_vali(x,y,seed=1,n=10,degree=1):
 	kf = KFold(n_splits=n, random_state=seed, shuffle=True)
 	Mean_kf = 0
+	
 	for train_index, test_index in kf.split(x):
 		x_train, x_test = x[train_index], x[test_index]
 		y_train, y_test = y[train_index], y[test_index]
@@ -56,10 +57,11 @@ def cross_vali(x,y,seed=1,n=10,degree=1):
 		w1 = reg.w1
 		w0 = reg.w0
 		y_pred = reg.y(x_test)
+		#plt.plot(x_test, y_pred, "o")
+		
 		mse = reg.mse(y_test, y_pred)
 		
 		Mean_kf += np.sqrt(mse)
-	
 	return Mean_kf/n
 
 def f(x):
@@ -210,7 +212,7 @@ def main():
 	plt.show()
 
 def degreeAndError():
-	sample = 10
+	sample = 20
 	tag = "noisy"
 	#name = "sin_"+tag+"_"+str(sample)+"sample.csv"
 	#data = pd.read_csv(name)
@@ -219,9 +221,8 @@ def degreeAndError():
 	x_1 = np.arange( -1,1,0.2/(int(sample/10)) ) #data.iloc[:, 0].to_numpy()#np.arange( -1,1,0.2/(int(sample/10)) )
 	y = f(x_1) #data.iloc[:, 8].to_numpy()#f(x_1)
 	if(tag == "noisy"):
-			ran_f = np.array([i+random.random() for i in f(x_1)])
+			ran_f = np.array([i+random.uniform(0,0.5) for i in f(x_1)])
 			y = ran_f#data.iloc[:, -1].to_numpy() #f(x_1)
-	
 	#plt.plot(x_1, y,"o-")
 	#plt.plot(x_1,data.iloc[:, 8].to_numpy(),"o--")
 	
@@ -236,15 +237,33 @@ def degreeAndError():
 	X_min = np.max(X)
 	Y_min = np.max(y)
 	
+	#arr = [cross_vali(x_1, y, degree=2, seed=s) for s in range(1,1000)]
+	#print( sum(arr)/len(arr) )
+
 	for d in X:
-		_temp = cross_vali(x_1, y, degree=d)
+		arr = [cross_vali(x_1, y, degree=d, seed=s) for s in range(1,501)] # number of seed 500, [1,501)
+		_temp = sum(arr)/len(arr) #cross_vali(x_1, y, degree=d)
+		print(d,_temp)
 		Y1 = np.append(Y1, [ training_set(x_1, y, degree=d) ])
 		Y2 = np.append(Y2, [ _temp ])
 		
 		if(Y_min > _temp):
 			Y_min = _temp
 			X_min = d
-			
+		#plt.title("degree, rmse: "+str(d)+", "+str(_temp))
+		#plt.show()
+	############ Real graph ###############
+	"""
+	for d in range(X_min, X_min+50, 5):
+		print(d)
+		reg = line_reg(x_1,y,d)
+		y_pred = reg.y(x_1)
+		plt.plot(x_1, y,"o")
+		plt.plot(x_1, y_pred, "-")
+		plt.show()
+	"""
+	############ Real graph ###############
+	
 	plt.plot(X,Y1,"-")
 	plt.plot(X,Y2,"-")
 	plt.plot(X_min,Y_min,"o")
@@ -253,10 +272,11 @@ def degreeAndError():
 	plt.xlabel('Degree of Fit')
 	plt.ylabel('RMSE')
 	plt.title('training set & cross validation by '+str(sample)+' sample '+"("+tag+")")
+	plt.savefig('1.jpg')
 	plt.show()
 	
 def sampleAndError():
-	degree = 5 #len(data.iloc[:,].to_numpy()[0])
+	degree = 30 #len(data.iloc[:,].to_numpy()[0])
 	sample = 50
 	start_x = -1
 	end_x = 1
@@ -284,17 +304,23 @@ def sampleAndError():
 		y =  f(x_1)
 			
 		if(tag == "noisy"):
-			ran_f = np.array([i+random.random() for i in y])
+			ran_f = np.array([i+random.uniform(-1,1) for i in y])
 			y = ran_f#data.iloc[:, -1].to_numpy() #f(x_1)
 		
-		_temp = cross_vali(x_1, y, degree=degree)
+		
+		arr = [cross_vali(x_1, y, degree=degree, seed=s) for s in range(1,501)] # number of seed 500, [1,501)
+		_temp = sum(arr)/len(arr) #cross_vali(x_1, y, degree=d)
+		print(s,_temp)
+		#_temp = cross_vali(x_1, y, degree=degree)
 		Y1 = np.append(Y1, [ training_set(x_1, y, degree=degree) ])
 		Y2 = np.append(Y2, [ _temp ])
 		
 		if(Y_min > _temp):
 			Y_min = _temp
 			X_min = s
-
+		
+		#plt.title("sample, rmse: "+str(s)+", "+str(_temp))
+		#plt.show()
 	plt.plot(X,Y1,"-")
 	plt.plot(X,Y2,"-")
 	plt.plot(X_min,Y_min,"o")
@@ -303,8 +329,9 @@ def sampleAndError():
 	plt.xlabel('Number of Sample')
 	plt.ylabel('RMSE')
 	plt.title('training set & cross validation by '+str(degree)+' degree'+"("+tag+")")
+	plt.savefig('2.jpg')
 	plt.show()
 
 if __name__ == '__main__':
-	degreeAndError()
+	#degreeAndError()
 	sampleAndError()
