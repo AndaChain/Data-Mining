@@ -262,7 +262,6 @@ if __name__ == '__main__':
 		plt.plot(slope, rss, label=f"alpha={al}")
 		index = np.where(rss == min(rss))
 		plt.scatter(slope[index[0]], rss[index[0]])
-		print(slope[index[0]], rss[index[0]])
 		
 		x_line = np.append(x_line, [slope[index[0]]])
 		y_line = np.append(y_line, [rss[index[0]]])
