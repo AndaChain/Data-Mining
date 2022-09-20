@@ -57,13 +57,16 @@ def cross_vali(x,y,seed,n):
 	return Mean_kf/n
 
 def main():
-	name = 'HeightWeight100.csv'
+	name = 'HeightWeight20.csv'
 	#name = 'RocketPropellant.csv'
-	x_real = np.linspace(-200,200, 10000)
+	x_real = np.linspace(-1,1, 100000)
 	x,y = data(name)
-	#plt.plot(x, y, "o")
+	plt.xlabel('Height')
+	plt.ylabel('Weight')
+	plt.plot(x, y, "o")
+	plt.show()
 	
-	seed_N = 1000
+	seed_N = 5000
 	
 	arr_h = []
 	arr_c = []
@@ -76,7 +79,7 @@ def main():
 	
 	# 
 	_rmse_t = training_set(x,y)
-	
+	"""
 	# ------------------holdout-------------------
 	arr_test_size = np.arange(0.05, 1, 0.05)
 	print("------------------holdout------------------")
@@ -95,7 +98,7 @@ def main():
 	
 	# ------------------ plot holdout-------------------
 	plt.plot(arr_test_size, arr_aveg_h, "-")
-	plt.plot(arr_test_size, len(arr_aveg_h)*[_rmse_t], "--")
+	#plt.plot(arr_test_size, len(arr_aveg_h)*[_rmse_t], "--")
 	plt.xlabel('Split ratio of Data to Testing')
 	plt.ylabel('RMSE')
 	plt.title('X:Split ratio & Y:RMSE')
@@ -108,7 +111,7 @@ def main():
 	plt.show()
 	
 	# ------------------cross validation-------------------
-	_kf = np.arange(2, 30, 2)
+	_kf = np.arange(2, 12, 2)
 	print("------------------cross validation------------------")
 	for k in _kf:
 		arr_c = []
@@ -125,7 +128,7 @@ def main():
 	
 	# ------------------ plot cross validation-------------------
 	plt.plot(_kf, arr_aveg_c, "-")
-	plt.plot(_kf, len(arr_aveg_c)*[_rmse_t], "--")
+	#plt.plot(_kf, len(arr_aveg_c)*[_rmse_t], "--")
 	plt.xlabel('KFold')
 	plt.ylabel('RMSE')
 	plt.title('X:KFold & Y:RMSE')
@@ -136,7 +139,7 @@ def main():
 	plt.ylabel('STD')
 	plt.title('X:KFold & Y:STD')
 	plt.show()
-	
+	"""
 	# ------------------Matric & Sampling Size-------------------
 	name = 'HeightWeight.csv'
 	x,y = data(name)
@@ -150,10 +153,10 @@ def main():
 	
 	att_n = []
 	
-	for _n in range(10,50,10):
+	for _n in range(10,210,10):
 		sampling_ratio = 1-(_n/len(x))
 		att_n.append(_n)	
-		
+		print(_n)
 		arr_t = []
 		arr_h = []
 		arr_c = []
@@ -201,7 +204,6 @@ def main():
 	plt.show()
 
 if __name__ == '__main__':
-	"""
 	name = 'GenderHeightWeight.csv'
 	#name = 'RocketPropellant.csv'
 	x1,x2,y = data(name)
@@ -262,5 +264,4 @@ if __name__ == '__main__':
 	
 	diff=reg1.y(x2)-reg2.y(x2)
 	print("diff=:",(sum(diff)/len(diff))[0])
-	"""
-	main()
+	#main()
