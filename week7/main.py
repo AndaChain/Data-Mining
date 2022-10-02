@@ -1,14 +1,37 @@
 import numpy as np
+from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
+
 np.random.seed(1)
 
+# parameter
 start = -100
 end = 100
-ker1, mu1 = 5, 5
+ker1, mu1 = 5, -30
 ker2, mu2 = 15, 30
 Prior_1 = 0.5
 Prior_2 = 1-Prior_1
 r = np.linspace(start, end, num=end-start)
+
+############### No.4 ###############
+
+def holdout(x,y,test_size,seed=1):
+	x_train, x_test, y_train, y_test = train_test_split(x.reshape(-1, 1), y.reshape(-1, 1), test_size=test_size, random_state=seed)
+	return x_train, x_test
+if(input()=="1"):
+	ran = np.linspace(start, end, num=10)
+	class_1, class_2 = holdout(ran,ran,test_size=0.4)
+	ker1, mu1 = class_1.std(), class_1.mean()
+	ker2, mu2 = class_2.std(), class_2.mean()
+	Prior_1 = len(class_1)/len(ran)
+	Prior_2 = len(class_2)/len(ran)
+	plt.plot(class_1, len(class_1)*[0], "*", color = 'red')
+	plt.plot(class_2, len(class_2)*[1], "o", color = 'blue')
+	print("std1: "+str(ker1)+", "+ "mean1: "+str(mu1))
+	print("std2: "+str(ker2)+", "+ "mean2: "+str(mu2))
+	print("Prior1: "+str(Prior_1)+", "+ "Prior2: "+str(Prior_2))
+	plt.show()
+##################################
 
 ####### No.1->3 #######
 def p(r, mu, ker):
@@ -51,10 +74,12 @@ def posteriori(r, mu, ker, Prior, Evi):
 def g(r, mu, ker, Prior, Evi):
 	return -((r - mu)**2)/(2*ker**2) - (1/2)*np.log(2*np.pi) - np.log(ker) + np.log(Prior) - np.log(Evi)
 
+####################
+
 # Likelihood #################################################################
 arr_legend = []
-p_1 = p(r, ker1, mu1) # class 1
-p_2 = p(r, ker2, mu2) # class 2
+p_1 = p(r, mu1, ker1) # class 1
+p_2 = p(r, mu2, ker2) # class 2
 plt.plot(r, p_1)
 plt.plot(r, p_2)
 arr_legend.append("std: "+str(ker1)+", "+ "mean: "+str(mu1))
@@ -99,11 +124,20 @@ plt.show() # Posteriori
 
 # Decision Boudary, Basic Bayes#################################################################
 #r = np.linspace(start, end, num=end-start)
-Boudary = np.log(posteriori_1) - np.log(posteriori_2)#np.log( p(r, mu1, ker1)/p(r, mu2, ker2) ) + np.log( Prior_1/Prior_2 )
+Boudary = []
+if(Prior_1 >= Prior_2):
+	Boudary = np.log(posteriori_1) - np.log(posteriori_2)#np.log( p(r, mu1, ker1)/p(r, mu2, ker2) ) + np.log( Prior_1/Prior_2 )
+else:
+	Boudary = np.log(posteriori_2) - np.log(posteriori_1)
 print(Boudary)
 plt.plot(r, Boudary)
 plt.xlabel('x')
 plt.ylabel('y')
+try:
+	plt.plot(class_1, len(class_1)*[0], "*", color = 'red')
+	plt.plot(class_2, len(class_2)*[1], "o", color = 'blue')
+except:
+	pass
 plt.title("Decision Boudary Single Variable, Basic Bayes")
 plt.show()
 
@@ -112,19 +146,40 @@ plt.show()
 # Decision Boudary, Quadratic Function#################################################################
 g1 = g(r, mu1, ker1, Prior_1, Evi)
 g2 = g(r, mu2, ker2, Prior_2, Evi)
-Boudary_Qu = g1 - g2
+Boudary_Qu = []
+if(Prior_1 >= Prior_2):
+	Boudary_Qu = g1 - g2
+else:
+	Boudary_Qu = g2 - g1
 print(Boudary_Qu)
 plt.plot(r, Boudary_Qu)
 plt.xlabel('x')
 plt.ylabel('y')
+try:
+	plt.plot(class_1, len(class_1)*[0], "*", color = 'red')
+	plt.plot(class_2, len(class_2)*[1], "o", color = 'blue')
+except:
+	pass
 plt.title("Decision Boudary Single Variable, Quadratic Function")
 plt.show()
+
 
 
 figure, axis = plt.subplots(1, 2)
 axis[0].plot(r, Boudary)
 axis[0].set_title("Basic Bayes")
-  
+try:
+	axis[0].plot(class_1, len(class_1)*[0], "*", color = 'red')
+	axis[0].plot(class_2, len(class_2)*[1], "o", color = 'blue')
+except:
+	pass
+
 axis[1].plot(r, Boudary_Qu)
 axis[1].set_title("Quadratic Function")
+try:
+	axis[1].plot(class_1, len(class_1)*[0], "*", color = 'red')
+	axis[1].plot(class_2, len(class_2)*[1], "o", color = 'blue')
+except:
+	pass
 plt.show()
+
