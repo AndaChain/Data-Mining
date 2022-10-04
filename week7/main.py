@@ -5,22 +5,39 @@ import matplotlib.pyplot as plt
 np.random.seed(1)
 
 # parameter
-start = -100
-end = 100
-ker1, mu1 = 5, -30
-ker2, mu2 = 15, 30
-Prior_1 = 0.5
+start = -10
+end = 10
+ker1, mu1 = 2, -30
+ker2, mu2 = 2, 30
+Prior_1 = 0.1
 Prior_2 = 1-Prior_1
-r = np.linspace(start, end, num=end-start)
+r = np.linspace(start, end, num=1000)
 
 ############### No.4 ###############
 
-def holdout(x,y,test_size,seed=1):
-	x_train, x_test, y_train, y_test = train_test_split(x.reshape(-1, 1), y.reshape(-1, 1), test_size=test_size, random_state=seed)
-	return x_train, x_test
+def holdout(x,test_size):
+	#x_train, x_test, y_train, y_test = train_test_split(x.reshape(-1, 1), y.reshape(-1, 1), test_size=test_size, random_state=seed)
+	N_test_size = len(x)*test_size
+	print(N_test_size)
+	_x = np.random.choice(range(len(x)), size=int(N_test_size), replace=False)
+	print(_x)
+	class1 = []
+	class2 = []
+	
+	for i in range(len(x)):
+		if(i in _x):
+			class1.append(x[i])
+		else:
+			class2.append(x[i])
+	
+	class1 = np.array(class1)
+	class2 = np.array(class2)
+	return class1, class2
+	
 if(input()=="1"):
-	ran = np.linspace(start, end, num=10)
-	class_1, class_2 = holdout(ran,ran,test_size=0.4)
+	ran = r#np.linspace(start, end, num=1000)
+	class_1, class_2 = holdout(ran,test_size=0.5)
+	print(len(class_1), len(class_2))
 	ker1, mu1 = class_1.std(), class_1.mean()
 	ker2, mu2 = class_2.std(), class_2.mean()
 	Prior_1 = len(class_1)/len(ran)
@@ -30,6 +47,11 @@ if(input()=="1"):
 	print("std1: "+str(ker1)+", "+ "mean1: "+str(mu1))
 	print("std2: "+str(ker2)+", "+ "mean2: "+str(mu2))
 	print("Prior1: "+str(Prior_1)+", "+ "Prior2: "+str(Prior_2))
+	plt.xlabel('x')
+	plt.ylabel('Classes')
+	plt.yticks([0,1])
+	
+	
 	plt.show()
 ##################################
 
@@ -88,7 +110,7 @@ arr_legend.append("std: "+str(ker2)+", "+ "mean: "+str(mu2))
 plt.legend(arr_legend, loc='best')
 plt.xlabel('x')
 plt.ylabel('Likelihood')
-plt.title("Likelihood Single Variable, Basic Bayes")
+plt.title("Likelihood Single Variable")
 plt.show() # Likelihood
 
 
@@ -117,7 +139,7 @@ arr_legend.append("std: "+str(ker2)+", "+ "mean: "+str(mu2))
 plt.legend(arr_legend, loc='best')
 plt.xlabel('x')
 plt.ylabel('Posteriori')
-plt.title("Posteriori Single Variable, Basic Bayes")
+plt.title("Posteriori Single Variable")
 plt.show() # Posteriori
 
 
@@ -138,7 +160,7 @@ try:
 	plt.plot(class_2, len(class_2)*[1], "o", color = 'blue')
 except:
 	pass
-plt.title("Decision Boudary Single Variable, Basic Bayes")
+plt.title("Decision Boudary Single Variable")
 plt.show()
 
 
@@ -166,8 +188,9 @@ plt.show()
 
 
 figure, axis = plt.subplots(1, 2)
+plt.title("Number of Sample: 10")
 axis[0].plot(r, Boudary)
-axis[0].set_title("Basic Bayes")
+axis[0].set_title("Linear Function")
 try:
 	axis[0].plot(class_1, len(class_1)*[0], "*", color = 'red')
 	axis[0].plot(class_2, len(class_2)*[1], "o", color = 'blue')
@@ -182,4 +205,12 @@ try:
 except:
 	pass
 plt.show()
+
+
+# Mybe Special #################################################
+
+
+
+
+
 
