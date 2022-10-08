@@ -5,13 +5,13 @@ import matplotlib.pyplot as plt
 np.random.seed(1)
 
 # parameter
-start = -10
-end = 10
-ker1, mu1 = 2, -30
-ker2, mu2 = 2, 30
-Prior_1 = 0.1
+start = -100
+end = 100
+ker1, mu1 = 5, -30
+ker2, mu2 = 15, 30
+Prior_1 = 0.5
 Prior_2 = 1-Prior_1
-r = np.linspace(start, end, num=1000)
+r = np.linspace(start, end, num=200)
 
 ############### No.4 ###############
 
@@ -38,6 +38,7 @@ if(input()=="1"):
 	ran = r#np.linspace(start, end, num=1000)
 	class_1, class_2 = holdout(ran,test_size=0.5)
 	print(len(class_1), len(class_2))
+	print(class_1)
 	ker1, mu1 = class_1.std(), class_1.mean()
 	ker2, mu2 = class_2.std(), class_2.mean()
 	Prior_1 = len(class_1)/len(ran)
