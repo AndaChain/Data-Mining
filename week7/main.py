@@ -4,83 +4,73 @@ import matplotlib.pyplot as plt
 
 np.random.seed(1)
 
-# parameter
+########## genarate data random&from mean AND std ##########
+def genarate_data(desired_mean, desired_std_dev, num_samples):
+	desired_mean = desired_mean
+	desired_std_dev =desired_std_dev
+	num_samples = num_samples
+
+	samples = np.random.normal(size=num_samples)
+	#samples = np.array(range(0,num_samples))
+	actual_mean = np.mean(samples)
+	actual_std = np.std(samples)
+	
+	zero_mean_samples = samples - (actual_mean)
+	zero_mean_std = np.std(zero_mean_samples)
+	scaled_samples = zero_mean_samples * (desired_std_dev/zero_mean_std) ###### key
+	
+	final_samples = scaled_samples + desired_mean
+	final_mean = np.mean(final_samples)
+	final_std = np.std(final_samples)
+	
+	return final_samples
+
+# parameter & data
 start = -100
 end = 100
-ker1, mu1 = 5, -30
-ker2, mu2 = 15, 30
+N = end-start
+mu1, ker1 = -30, 15
+mu2, ker2 = 30, 15
 Prior_1 = 0.5
 Prior_2 = 1-Prior_1
-r = np.linspace(start, end, num=200)
+r = np.linspace(start, end, num=end-start)
+class_1 = genarate_data(mu1, ker1, int(N*Prior_1))
+class_2 = genarate_data(mu2, ker2, N-int(N*Prior_1))
+
+#plt.plot(class_1, len(class_1)*[0], "o")
+#plt.plot(class_2, len(class_2)*[1], "o")
+#plt.show()
 
 ############### No.4 ###############
-
 def holdout(x,test_size):
-	#x_train, x_test, y_train, y_test = train_test_split(x.reshape(-1, 1), y.reshape(-1, 1), test_size=test_size, random_state=seed)
 	N_test_size = len(x)*test_size
-	print(N_test_size)
 	_x = np.random.choice(range(len(x)), size=int(N_test_size), replace=False)
-	print(_x)
-	class1 = []
-	class2 = []
-	
-	for i in range(len(x)):
-		if(i in _x):
-			class1.append(x[i])
-		else:
-			class2.append(x[i])
-	
-	class1 = np.array(class1)
-	class2 = np.array(class2)
-	return class1, class2
+	return x[_x]
 	
 if(input()=="1"):
-	ran = r#np.linspace(start, end, num=1000)
-	class_1, class_2 = holdout(ran,test_size=0.5)
-	print(len(class_1), len(class_2))
-	print(class_1)
-	ker1, mu1 = class_1.std(), class_1.mean()
-	ker2, mu2 = class_2.std(), class_2.mean()
-	Prior_1 = len(class_1)/len(ran)
-	Prior_2 = len(class_2)/len(ran)
-	plt.plot(class_1, len(class_1)*[0], "*", color = 'red')
-	plt.plot(class_2, len(class_2)*[1], "o", color = 'blue')
-	print("std1: "+str(ker1)+", "+ "mean1: "+str(mu1))
-	print("std2: "+str(ker2)+", "+ "mean2: "+str(mu2))
-	print("Prior1: "+str(Prior_1)+", "+ "Prior2: "+str(Prior_2))
+	want = 100
+	ratio = want/N
+	class_1 = holdout(class_1, ratio)
+	class_2 = holdout(class_2, ratio)
+	
+	
+	plt.plot(class_1, len(class_1)*[0], "o")
+	plt.plot(class_2, len(class_2)*[1], "o")
+
+	mu1, ker1 = class_1.mean(), class_1.std()
+	mu2, ker2 = class_2.mean(), class_2.std()
+	
+	plt.legend(["class_1","class_2"], loc='best')
 	plt.xlabel('x')
-	plt.ylabel('Classes')
+	plt.ylabel('classes')
 	plt.yticks([0,1])
-	
-	
+	plt.title(str(want)+" Data")
 	plt.show()
 ##################################
 
 ####### No.1->3 #######
 def p(r, mu, ker):
 	return np.exp(-0.5*((r-mu)/ker)**2)/(np.sqrt(2*np.pi*ker))
-
-def f(ker, mu): # !!!No used!!!
-	## ker = std
-	## mu = mean
-
-	#r = np.linspace(start, end, num=end-start)
-	p_ = p(r, mu, ker)
-
-	"""
-	max_p = p(r[0], mu, ker)
-	max_r = r[0]
-	for i in r:
-		if(max_p < p(i, mu, ker)):
-			max_p = p(i, mu, ker)
-			max_r = i
-	"""
-
-	#plt.plot(max_r, max_p, "o")
-	#plt.annotate( "("+str(np.round(max_r, 3))+", "+str(np.round(max_p, 3))+")",(max_r,max_p) )
-	plt.plot(r, p_)
-	arr_legend.append("std: "+str(ker)+", "+ "mean: "+str(mu))
-	return p_
 
 def Evidence(r, arr_mu, arr_ker, arr_Prior):
 	index = len(arr_mu)
@@ -97,7 +87,6 @@ def posteriori(r, mu, ker, Prior, Evi):
 def g(r, mu, ker, Prior, Evi):
 	return -((r - mu)**2)/(2*ker**2) - (1/2)*np.log(2*np.pi) - np.log(ker) + np.log(Prior) - np.log(Evi)
 
-####################
 
 # Likelihood #################################################################
 arr_legend = []
@@ -105,15 +94,14 @@ p_1 = p(r, mu1, ker1) # class 1
 p_2 = p(r, mu2, ker2) # class 2
 plt.plot(r, p_1)
 plt.plot(r, p_2)
-arr_legend.append("std: "+str(ker1)+", "+ "mean: "+str(mu1))
-arr_legend.append("std: "+str(ker2)+", "+ "mean: "+str(mu2))
+arr_legend.append("std: "+str(np.round(ker1,2))+", "+ "mean: "+str(np.round(mu1,2)))
+arr_legend.append("std: "+str(np.round(ker2,2))+", "+ "mean: "+str(np.round(mu2,2)))
 
 plt.legend(arr_legend, loc='best')
 plt.xlabel('x')
 plt.ylabel('Likelihood')
 plt.title("Likelihood Single Variable")
 plt.show() # Likelihood
-
 
 
 # Posteriori #################################################################
@@ -134,8 +122,8 @@ posteriori_1 = posteriori(r, mu1, ker1, Prior_1, Evi) # class 1
 posteriori_2 = posteriori(r, mu2, ker2, Prior_2, Evi) # class 2
 plt.plot(r, posteriori_1)
 plt.plot(r, posteriori_2)
-arr_legend.append("std: "+str(ker1)+", "+ "mean: "+str(mu1))
-arr_legend.append("std: "+str(ker2)+", "+ "mean: "+str(mu2))
+arr_legend.append("std: "+str(np.round(ker1,2))+", "+ "mean: "+str(np.round(mu1,2)))
+arr_legend.append("std: "+str(np.round(ker2,2))+", "+ "mean: "+str(np.round(mu2,2)))
 
 plt.legend(arr_legend, loc='best')
 plt.xlabel('x')
@@ -143,8 +131,7 @@ plt.ylabel('Posteriori')
 plt.title("Posteriori Single Variable")
 plt.show() # Posteriori
 
-
-
+"""
 # Decision Boudary, Basic Bayes#################################################################
 #r = np.linspace(start, end, num=end-start)
 Boudary = []
@@ -206,9 +193,7 @@ try:
 except:
 	pass
 plt.show()
-
-
-# Mybe Special #################################################
+"""
 
 
 
